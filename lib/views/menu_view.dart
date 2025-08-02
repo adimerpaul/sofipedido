@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sofiapedido/views/home_view.dart';
-import 'package:sofiapedido/views/import_view.dart';
-import 'package:sofiapedido/views/pedidos_view.dart';
+import 'package:sofiapedido/views/pages/home_view.dart';
+import 'package:sofiapedido/views/pages/import_view.dart';
+import 'package:sofiapedido/views/pages/pedidos_view.dart';
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
