@@ -83,9 +83,9 @@ class DatabaseHelper {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({"fecha": fecha, "color": color}),
     );
-    print('Llamando a API: $url/importPedido');
-    print('Request: ${jsonEncode({"fecha": fecha, "color": color})}');
-    print('Response: ${response.statusCode} - ${response.body}');
+    // print('Llamando a API: $url/importPedido');
+    // print('Request: ${jsonEncode({"fecha": fecha, "color": color})}');
+    // print('Response: ${response.statusCode} - ${response.body}');
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sofiapedido/views/pages/detalle_pedido_view.dart';
+// import 'package:sqflite/sqflite.dart';
 import 'package:sofiapedido/services/database_helper.dart';
 
 class PedidosView extends StatefulWidget {
@@ -129,11 +130,18 @@ class _PedidosViewState extends State<PedidosView> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DetallePedidoView(pedidoId: p['id']),
+                          ),
+                        ).then((_) => cargarPedidos());
+                      },
                       leading: CircleAvatar(
                         backgroundColor: p['confirmado'] == 1 ? Colors.green : Colors.grey,
                         child: Text(
-                          // p['id'].toString().substring(p['id'].toString().length - 3),
-                            (index+1).toString(),
+                          (index + 1).toString(),
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

@@ -18,7 +18,7 @@ class _MenuViewState extends State<MenuView> {
     const PedidosView(),
     const ProductosView(),
   ];
-  int currentIndex = 1;
+  int currentIndex = 2;
 
   @override
   Widget build(BuildContext context) {
