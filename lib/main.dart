@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sofiapedido/views/home_view.dart';
-
-Future<void> main() async {
+Future main() async {
+  // WidgetsFlutterBinding.ensureInitialized();
   const bool isProduction = bool.fromEnvironment('dart.vm.product');
-  await dotenv.load(
-    fileName: isProduction ? ".env.production" : ".env",
-  );
+  await dotenv.load(fileName: isProduction ? '.env' : '.env.development');
   runApp(const MyApp());
 }
 
