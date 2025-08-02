@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sofiapedido/views/pages/home_view.dart';
 import 'package:sofiapedido/views/pages/import_view.dart';
 import 'package:sofiapedido/views/pages/pedidos_view.dart';
+import 'package:sofiapedido/views/pages/productos_view.dart';
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
@@ -11,13 +12,14 @@ class MenuView extends StatefulWidget {
 }
 
 class _MenuViewState extends State<MenuView> {
-  // List Views
-  List items = [
-    HomeView(),
-    ImportView(),
-    PedidosView(),
+  final List<Widget> items = [
+    const HomeView(),
+    const ImportView(),
+    const PedidosView(),
+    const ProductosView(),
   ];
   int currentIndex = 1;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,10 +33,8 @@ class _MenuViewState extends State<MenuView> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.red,
-              ),
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.red),
               child: Center(
                 child: Text(
                   'Sofia Pedido',
@@ -43,36 +43,38 @@ class _MenuViewState extends State<MenuView> {
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
-                )
-              )
+                ),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Inicio'),
               onTap: () {
-                setState(() {
-                  currentIndex = 0;
-                });
+                setState(() => currentIndex = 0);
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.import_export),
+              leading: const Icon(Icons.cloud_download),
               title: const Text('Importar'),
               onTap: () {
-                setState(() {
-                  currentIndex = 1;
-                });
+                setState(() => currentIndex = 1);
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.list),
+              leading: const Icon(Icons.receipt_long),
               title: const Text('Pedidos'),
               onTap: () {
-                setState(() {
-                  currentIndex = 2;
-                });
+                setState(() => currentIndex = 2);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.inventory_2),
+              title: const Text('Productos'),
+              onTap: () {
+                setState(() => currentIndex = 3);
                 Navigator.pop(context);
               },
             ),

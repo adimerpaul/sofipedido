@@ -162,4 +162,17 @@ class DatabaseHelper {
     await db.delete('productos');
     await db.delete('pedidos');
   }
+  Future<List<Map<String, dynamic>>> obtenerResumenProductos() async {
+    final db = await database;
+    return await db.rawQuery('''
+    SELECT 
+      cod_prod,
+      nombre,
+      SUM(cantidad) AS total_cantidad,
+      SUM(subtotal) AS total_subtotal
+    FROM productos
+    GROUP BY cod_prod, nombre
+    ORDER BY total_cantidad DESC
+  ''');
+  }
 }

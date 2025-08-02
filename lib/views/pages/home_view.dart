@@ -6,7 +6,7 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text('Home View'),
+      child: Image.asset('assets/logo.png', width: 200, height: 200),
     );
   }
 }
