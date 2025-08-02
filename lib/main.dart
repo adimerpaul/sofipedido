@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sofiapedido/views/home_view.dart';
+import 'package:sofiapedido/views/menu_view.dart';
 Future main() async {
   // WidgetsFlutterBinding.ensureInitialized();
   const bool isProduction = bool.fromEnvironment('dart.vm.product');
-  await dotenv.load(fileName: isProduction ? '.env' : '.env.development');
+  await dotenv.load(fileName: isProduction ? '.env.production' : '.env');
   runApp(const MyApp());
 }
 
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.red,
       ),
       routes: {
-        '/': (context) => const HomeView(),
+        '/': (context) => const MenuView(),
       },
       initialRoute: '/',
       // home: const MyHomePage(),
