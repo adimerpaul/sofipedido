@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sofiapedido/services/database_helper.dart';
+import 'package:sqflite/sqflite.dart';
 
 class ImportView extends StatefulWidget {
   const ImportView({super.key});
@@ -13,6 +14,10 @@ class _ImportViewState extends State<ImportView> {
   bool loading = false;
   String mensaje = '';
   String fecha = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+  int total = 0;
+  int confirmados = 0;
+  int noConfirmados = 0;
 
   // Colores disponibles (zona + color real)
   final List<Map<String, String>> colores = [
@@ -27,6 +32,61 @@ class _ImportViewState extends State<ImportView> {
   ];
 
   Map<String, String>? colorSeleccionado;
+
+  @override
+  void initState() {
+    super.initState();
+    cargarTotales();
+  }
+  Future<void> vaciarDatos() async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Estás seguro?'),
+        content: const Text('Esto eliminará todos los pedidos y productos importados.'),
+        actions: [
+          TextButton(
+            child: const Text('Cancelar'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Sí, eliminar', style: TextStyle(color: Colors.white)),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmado == true) {
+      setState(() {
+        loading = true;
+        mensaje = 'Eliminando datos...';
+      });
+
+      try {
+        await DatabaseHelper().vaciarTodo();
+        await cargarTotales();
+        setState(() => mensaje = 'Datos eliminados correctamente 🗑');
+      } catch (e) {
+        setState(() => mensaje = 'Error al eliminar ❌: $e');
+      } finally {
+        setState(() => loading = false);
+      }
+    }
+  }
+
+
+  Future<void> cargarTotales() async {
+    final db = await DatabaseHelper().database;
+    final totalCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM pedidos')) ?? 0;
+    final confirmedCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM pedidos WHERE confirmado = 1')) ?? 0;
+    setState(() {
+      total = totalCount;
+      confirmados = confirmedCount;
+      noConfirmados = totalCount - confirmedCount;
+    });
+  }
 
   Future<void> importarDatos() async {
     if (colorSeleccionado == null || fecha.isEmpty) {
@@ -45,6 +105,7 @@ class _ImportViewState extends State<ImportView> {
         colorSeleccionado!['color']!,
       );
       setState(() => mensaje = 'Datos importados correctamente ✅');
+      await cargarTotales();
     } catch (e) {
       setState(() => mensaje = 'Error al importar ❌: $e');
     } finally {
@@ -61,6 +122,7 @@ class _ImportViewState extends State<ImportView> {
     try {
       final pedidos = await DatabaseHelper().exportarPedidos();
       setState(() => mensaje = 'Exportado ${pedidos.length} pedidos');
+      await cargarTotales();
     } catch (e) {
       setState(() => mensaje = 'Error al exportar ❌: $e');
     } finally {
@@ -74,13 +136,31 @@ class _ImportViewState extends State<ImportView> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Importar / Exportar Pedidos',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
 
-            // Input de fecha
+            // 🟨 CARD DE RESUMEN
+            Card(
+              elevation: 3,
+              margin: const EdgeInsets.only(bottom: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _resumenBox('Importados', total, Colors.black87),
+                    _resumenBox('Confirmados', confirmados, Colors.green),
+                    _resumenBox('No confirmados', noConfirmados, Colors.red),
+                  ],
+                ),
+              ),
+            ),
+
+            // 📆 INPUT DE FECHA
             TextFormField(
               initialValue: fecha,
               onChanged: (val) => fecha = val,
@@ -92,7 +172,7 @@ class _ImportViewState extends State<ImportView> {
             ),
             const SizedBox(height: 16),
 
-            // Dropdown de colores
+            // 🎨 SELECTOR DE COLORES
             DropdownButtonFormField<Map<String, String>>(
               value: colorSeleccionado,
               decoration: const InputDecoration(
@@ -124,7 +204,7 @@ class _ImportViewState extends State<ImportView> {
             ),
             const SizedBox(height: 24),
 
-            // Botón de importar
+            // 📥 Botón de importar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -140,7 +220,7 @@ class _ImportViewState extends State<ImportView> {
             ),
             const SizedBox(height: 10),
 
-            // Botón de exportar
+            // 📤 Botón de exportar
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -152,6 +232,22 @@ class _ImportViewState extends State<ImportView> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onPressed: loading ? null : exportarDatos,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+// 🗑 Botón de vaciar datos
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.delete_forever),
+                label: const Text('Vaciar todos los datos'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[700],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: loading ? null : vaciarDatos,
               ),
             ),
             const SizedBox(height: 24),
@@ -167,6 +263,19 @@ class _ImportViewState extends State<ImportView> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _resumenBox(String label, int cantidad, Color color) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        Text(
+          '$cantidad',
+          style: TextStyle(fontSize: 20, color: color),
+        ),
+      ],
     );
   }
 }

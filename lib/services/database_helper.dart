@@ -54,7 +54,7 @@ class DatabaseHelper {
             bonificacion INTEGER,
             bonificacion_aprobacion TEXT,
             bonificacion_id TEXT,
-            confirmado INTEGER DEFAULT 0,
+            confirmado INTEGER DEFAULT 0
           )
         ''');
 
@@ -156,5 +156,10 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> exportarProductos(int pedidoId) async {
     final db = await database;
     return await db.query('productos', where: 'pedido_id = ?', whereArgs: [pedidoId]);
+  }
+  Future<void> vaciarTodo() async {
+    final db = await database;
+    await db.delete('productos');
+    await db.delete('pedidos');
   }
 }
