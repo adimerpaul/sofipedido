@@ -212,8 +212,14 @@ class DatabaseHelper {
   Future<void> exportarPedidos() async {
     final db = await database;
 
-    final pedidos = await db.query('pedidos');
-    List<Map<String, dynamic>> exportList = [];
+    // Solo no confirmados (ajusta si quieres otro filtro)
+    final pedidos = await db.query('pedidos', where: 'confirmado = 1');
+
+    if (pedidos.isEmpty) {
+      throw Exception('No hay pedidos pendientes para exportar.');
+    }
+
+    final exportList = <Map<String, dynamic>>[];
 
     for (var pedido in pedidos) {
       final productos = await db.query(
@@ -224,31 +230,57 @@ class DatabaseHelper {
 
       exportList.add({
         ...pedido,
-        'nro_pedido': pedido['id'], // mapeo al campo del backend
-        'productos': productos
+        'nro_pedido': pedido['id'],
+        'productos': productos.map((p) => {
+          'cod_prod': p['cod_prod'],
+          'nombre': p['nombre'],
+          'precio': (p['precio'] as num?)?.toDouble() ?? 0.0,
+          'cantidad': (p['cantidad'] as num?)?.toDouble() ?? 0.0,
+          'peso': (p['peso'] as num?)?.toDouble() ?? 0.0,   // <-- AQUI
+          'cantidad_texto': p['cantidad_texto'],
+          'subtotal': (p['subtotal'] as num?)?.toDouble() ?? 0.0,
+        }).toList(),
       });
     }
 
-    final response = await http.post(
-      Uri.parse('$url/exportar-pedidos'),
-      headers: {'Content-Type': 'application/json'},
+    final uri = Uri.parse('$url/exportar-pedidos');
+    final res = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: jsonEncode({'pedidos': exportList}),
     );
 
-    if (response.statusCode == 200) {
-      // Marca como exportados (confirmado = 1)
-      for (var pedido in pedidos) {
-        await db.update(
-          'pedidos',
-          {'confirmado': 1},
-          where: 'id = ?',
-          whereArgs: [pedido['id']],
-        );
-      }
-    } else {
-      throw Exception('Error al exportar: ${response.statusCode}');
+    // Logs útiles para ver el problema real
+    // ignore: avoid_print
+    print('EXPORT status: ${res.statusCode}');
+    // ignore: avoid_print
+    print('EXPORT body: ${res.body}');
+
+    if (res.statusCode != 200) {
+      throw Exception('Error HTTP ${res.statusCode}: ${res.body}');
     }
+
+    final json = jsonDecode(res.body);
+    if (json is! Map || json['status'] != 'success') {
+      throw Exception('Exportación fallida: ${res.body}');
+    }
+
+    // Marca confirmados localmente
+    final batch = db.batch();
+    for (var pedido in pedidos) {
+      batch.update(
+        'pedidos',
+        {'confirmado': 1},
+        where: 'id = ?',
+        whereArgs: [pedido['id']],
+      );
+    }
+    await batch.commit(noResult: true);
   }
+
 
 
   Future<List<Map<String, dynamic>>> exportarProductos(int pedidoId) async {
