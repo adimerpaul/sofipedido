@@ -67,6 +67,7 @@ class DatabaseHelper {
             nombre TEXT,
             precio REAL,
             cantidad REAL,
+            peso REAL default 0,
             cantidad_texto TEXT,
             subtotal REAL
           )
@@ -135,6 +136,7 @@ class DatabaseHelper {
               'nombre': prod['producto'],
               'precio': double.tryParse(prod['precio'].toString()) ?? 0.0,
               'cantidad': double.tryParse(prod['Cant'].toString()) ?? 0.0,
+              'peso': 0.0,
               'cantidad_texto': prod['Canttxt'],
               'subtotal': double.tryParse(prod['subtotal'].toString()) ?? 0.0,
             });
@@ -148,10 +150,47 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Map<String, dynamic>>> exportarPedidos() async {
+  Future<void> exportarPedidos() async {
     final db = await database;
-    return await db.query('pedidos');
+
+    final pedidos = await db.query('pedidos');
+    List<Map<String, dynamic>> exportList = [];
+
+    for (var pedido in pedidos) {
+      final productos = await db.query(
+        'productos',
+        where: 'pedido_id = ?',
+        whereArgs: [pedido['id']],
+      );
+
+      exportList.add({
+        ...pedido,
+        'nro_pedido': pedido['id'], // mapeo al campo del backend
+        'productos': productos
+      });
+    }
+
+    final response = await http.post(
+      Uri.parse('$url/exportar-pedidos'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'pedidos': exportList}),
+    );
+
+    if (response.statusCode == 200) {
+      // Marca como exportados (confirmado = 1)
+      for (var pedido in pedidos) {
+        await db.update(
+          'pedidos',
+          {'confirmado': 1},
+          where: 'id = ?',
+          whereArgs: [pedido['id']],
+        );
+      }
+    } else {
+      throw Exception('Error al exportar: ${response.statusCode}');
+    }
   }
+
 
   Future<List<Map<String, dynamic>>> exportarProductos(int pedidoId) async {
     final db = await database;
@@ -175,4 +214,5 @@ class DatabaseHelper {
     ORDER BY total_cantidad DESC
   ''');
   }
+
 }

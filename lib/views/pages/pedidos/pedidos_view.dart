@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sofiapedido/views/pages/detalle_pedido_view.dart';
+import 'package:sofiapedido/views/pages/pedidos/detalle_pedido_view.dart';
 // import 'package:sqflite/sqflite.dart';
 import 'package:sofiapedido/services/database_helper.dart';
 
@@ -27,10 +27,15 @@ class _PedidosViewState extends State<PedidosView> {
   Future<void> cargarPedidos() async {
     final db = await DatabaseHelper().database;
 
-    final todos = await db.query('pedidos', orderBy: 'fecha DESC');
+    final todos = await db.rawQuery('''
+    SELECT p.*, 
+      (SELECT COUNT(*) FROM productos WHERE pedido_id = p.id) AS productos_count
+    FROM pedidos p
+    ORDER BY fecha DESC
+  ''');
+
     final totalCount = todos.length;
-    final confirmedCount =
-        todos.where((p) => p['confirmado'] == 1).length;
+    final confirmedCount = todos.where((p) => p['confirmado'] == 1).length;
 
     setState(() {
       pedidos = todos;
@@ -146,7 +151,7 @@ class _PedidosViewState extends State<PedidosView> {
                         ),
                       ),
                       title: Text(
-                        'Pedido #${p['id']}',
+                        'Pedido #${p['id']} (${p['productos_count']})',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Column(

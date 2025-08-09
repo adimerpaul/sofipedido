@@ -120,8 +120,8 @@ class _ImportViewState extends State<ImportView> {
     });
 
     try {
-      final pedidos = await DatabaseHelper().exportarPedidos();
-      setState(() => mensaje = 'Exportado ${pedidos.length} pedidos');
+      await DatabaseHelper().exportarPedidos();
+      setState(() => mensaje = 'Exportado correctamente ✅');
       await cargarTotales();
     } catch (e) {
       setState(() => mensaje = 'Error al exportar ❌: $e');
