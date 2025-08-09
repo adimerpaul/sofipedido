@@ -31,7 +31,7 @@ class _PedidosViewState extends State<PedidosView> {
     SELECT p.*, 
       (SELECT COUNT(*) FROM productos WHERE pedido_id = p.id) AS productos_count
     FROM pedidos p
-    ORDER BY fecha DESC
+    ORDER BY productos_count DESC
   ''');
 
     final totalCount = todos.length;
