@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sofiapedido/views/pages/home_view.dart';
 import 'package:sofiapedido/views/pages/import_view.dart';
 import 'package:sofiapedido/views/pages/pedidos/pedidos_view.dart';
+import 'package:sofiapedido/views/pages/productos_totales_view.dart';
 import 'package:sofiapedido/views/pages/productos_view.dart';
 
 class MenuView extends StatefulWidget {
@@ -17,6 +18,7 @@ class _MenuViewState extends State<MenuView> {
     const ImportView(),
     const PedidosView(),
     const ProductosView(),
+    const ProductosTotalesView()
   ];
   int currentIndex = 2;
 
@@ -78,6 +80,15 @@ class _MenuViewState extends State<MenuView> {
                 Navigator.pop(context);
               },
             ),
+            ListTile(
+              // prodcutos totales
+              leading: const Icon(Icons.list),
+              title: const Text('Productos Totales'),
+              onTap: () {
+                setState(() => currentIndex = 4);
+                Navigator.pop(context);
+              }
+            )
           ],
         ),
       ),

@@ -72,7 +72,66 @@ class DatabaseHelper {
             subtotal REAL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE productos_totales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha TEXT,
+            cod_prod TEXT,
+            nombre TEXT,
+            total_cantidad REAL,
+            total_subtotal REAL
+          )
+        ''');
       },
+    );
+  }
+  // 1) Importa desde API y guarda LOCAL (vacía y vuelve a llenar)
+  Future<void> importarResumenProductosDesdeApi(String fecha) async {
+    final db = await database;
+
+    final response = await http.post(
+      Uri.parse('$url/reporteTotalProductos'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"fecha": fecha}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al llamar API: ${response.statusCode}');
+    }
+
+    final json = jsonDecode(response.body);
+    if (json['status'] != 'success') {
+      throw Exception('Error desde servidor: ${json['message']}');
+    }
+
+    final List productos = json['data'];
+
+    // transacción para atomicidad + rendimiento
+    await db.transaction((txn) async {
+      await txn.delete('productos_totales');
+
+      final batch = txn.batch();
+      for (var prod in productos) {
+        batch.insert('productos_totales', {
+          'fecha': fecha,
+          'cod_prod': prod['cod_prod'],
+          'nombre': prod['nombre'],
+          'total_cantidad':
+          double.tryParse(prod['total_cantidad'].toString()) ?? 0.0,
+          'total_subtotal':
+          double.tryParse(prod['total_subtotal'].toString()) ?? 0.0,
+        });
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
+// 2) Lee SOLO de la tabla local (sin API)
+  Future<List<Map<String, dynamic>>> obtenerProductosTotalesGuardados() async {
+    final db = await database;
+    return await db.query(
+      'productos_totales',
+      orderBy: 'total_cantidad DESC',
     );
   }
 
