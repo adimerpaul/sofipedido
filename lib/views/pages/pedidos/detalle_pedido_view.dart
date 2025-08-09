@@ -46,9 +46,10 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
             .map(
               (producto) => {
                 ...producto,
-                'cantidad': producto['cantidad'] ?? 0,
+                'cantidad': producto['cantidad'] ?? 0.0,
                 'peso': producto['peso'] ?? 0.0,
                 'subtotal': producto['subtotal'] ?? 0.0,
+                'nombre': producto['nombre']?.toString().trim() ?? 'Sin nombre',
               },
             )
             .toList();
@@ -137,6 +138,7 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
                   Text('Cliente: ${pedido?['cliente_nombre']}'),
                   Text('Dirección: ${pedido?['cliente_direccion']}'),
                   Text('Fecha: ${pedido?['fecha']}'),
+                  Text('Comentario: ${pedido?['comentario'] ?? 'N/A'}'),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -180,7 +182,34 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
 
                               return Card(
                                 child: ListTile(
-                                  title: Text(p['nombre'].toString().trim()),
+                                  title: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(p['nombre'].toString().trim()),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Código: ${p['cod_prod']}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        //   cantidad_texto
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Comentario: ${p['cantidad_texto'] ?? 'N/A'}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
