@@ -82,6 +82,15 @@ class DatabaseHelper {
             total_subtotal REAL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE zona_import (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha TEXT,
+            zona TEXT,
+            color TEXT,
+            colorStyle TEXT,
+          )
+        ''');
       },
     );
   }
@@ -134,18 +143,29 @@ class DatabaseHelper {
       orderBy: 'total_cantidad DESC',
     );
   }
+  // insertColorImport
+  Future<void> insertColorImport(String fecha, String zona, String color, String colorStyle) async {
+    final db = await database;
+    await db.insert('zona_import', {
+      'fecha': fecha,
+      'zona': zona,
+      'color': color,
+      'colorStyle': colorStyle,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
-  Future<void> importarPedidosDesdeApi(String fecha, String color) async {
+  Future<void> importarPedidosDesdeApi(String fecha, color) async {
     final db = await database;
 
     final response = await http.post(
       Uri.parse('$url/importPedido'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({"fecha": fecha, "color": color}),
+      body: jsonEncode({"fecha": fecha, "color": color['color']}),
     );
     // print('Llamando a API: $url/importPedido');
     // print('Request: ${jsonEncode({"fecha": fecha, "color": color})}');
     // print('Response: ${response.statusCode} - ${response.body}');
+    insertColorImport(fecha, color['zona'], color['color'], color['colorStyle']);
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
@@ -291,6 +311,7 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('productos');
     await db.delete('pedidos');
+    await db.delete('zona_import');
   }
   Future<List<Map<String, dynamic>>> obtenerResumenProductos() async {
     final db = await database;

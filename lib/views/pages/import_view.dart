@@ -102,7 +102,7 @@ class _ImportViewState extends State<ImportView> {
     try {
       await DatabaseHelper().importarPedidosDesdeApi(
         fecha,
-        colorSeleccionado!['color']!,
+        colorSeleccionado!,
       );
       setState(() => mensaje = 'Datos importados correctamente ✅');
       await cargarTotales();
