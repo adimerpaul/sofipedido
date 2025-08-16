@@ -280,9 +280,11 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
                                       ),
                                     ],
                                   ),
-                                  trailing: estaConfirmado
-                                      ? null
-                                      : IconButton(
+                                  trailing:
+                                  // estaConfirmado
+                                  //     ? null
+                                  //     :
+                                  IconButton(
                                           icon: const Icon(
                                             Icons.delete,
                                             color: Colors.red,
