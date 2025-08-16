@@ -13,14 +13,28 @@ class MenuView extends StatefulWidget {
 }
 
 class _MenuViewState extends State<MenuView> {
-  final List<Widget> items = [
-    const HomeView(),
-    const ImportView(),
-    const PedidosView(),
-    const ProductosView(),
-    const ProductosTotalesView()
-  ];
-  int currentIndex = 2;
+  int currentIndex = 0;
+
+  // Devuelve el widget actual SIN usar 'late' ni listas almacenadas
+  Widget _currentBody() {
+    switch (currentIndex) {
+      case 0:
+        return HomeView(
+          onImportPressed: () => setState(() => currentIndex = 1),
+          onPedidosPressed: () => setState(() => currentIndex = 2),
+        );
+      case 1:
+        return const ImportView();
+      case 2:
+        return const PedidosView();
+      case 3:
+        return const ProductosView();
+      case 4:
+        return const ProductosTotalesView();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +44,7 @@ class _MenuViewState extends State<MenuView> {
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
       ),
-      body: items[currentIndex],
+      body: _currentBody(),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -81,14 +95,13 @@ class _MenuViewState extends State<MenuView> {
               },
             ),
             ListTile(
-              // prodcutos totales
               leading: const Icon(Icons.list),
               title: const Text('Productos Totales'),
               onTap: () {
                 setState(() => currentIndex = 4);
                 Navigator.pop(context);
-              }
-            )
+              },
+            ),
           ],
         ),
       ),

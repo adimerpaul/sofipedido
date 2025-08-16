@@ -33,10 +33,18 @@ class _ImportViewState extends State<ImportView> {
 
   Map<String, String>? colorSeleccionado;
 
+  List<Map<String, dynamic>> zonaImports = [];
+
+
   @override
   void initState() {
     super.initState();
     cargarTotales();
+    cargarZonaImports();
+  }
+  Future<void> cargarZonaImports() async {
+    final data = await DatabaseHelper().obtenerZonaImports(fecha: fecha);
+    setState(() => zonaImports = data);
   }
   Future<void> vaciarDatos() async {
     final confirmado = await showDialog<bool>(
@@ -67,6 +75,7 @@ class _ImportViewState extends State<ImportView> {
       try {
         await DatabaseHelper().vaciarTodo();
         await cargarTotales();
+        await cargarZonaImports();
         setState(() => mensaje = 'Datos eliminados correctamente 🗑');
       } catch (e) {
         setState(() => mensaje = 'Error al eliminar ❌: $e');
@@ -106,6 +115,7 @@ class _ImportViewState extends State<ImportView> {
       );
       setState(() => mensaje = 'Datos importados correctamente ✅');
       await cargarTotales();
+      await cargarZonaImports();
     } catch (e) {
       setState(() => mensaje = 'Error al importar ❌: $e');
     } finally {
@@ -159,11 +169,56 @@ class _ImportViewState extends State<ImportView> {
                 ),
               ),
             ),
+            // 🧩 HISTORIAL DE IMPORTACIONES (chips por zona de la fecha seleccionada)
+            if (zonaImports.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text('Historial de importaciones ($fecha)',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: zonaImports.map((z) {
+                  final colorHex = (z['colorStyle'] as String?)?.replaceAll('#', '') ?? '757575';
+                  final bg = Color(int.parse('0xFF$colorHex'));
+                  final zona = (z['zona'] ?? '').toString();
+                  final id = (z['id'] ?? 0) as int;
+                  return InputChip(
+                    label: Text(zona, style: const TextStyle(color: Colors.white)),
+                    backgroundColor: bg,
+                    selectedColor: bg,
+                    onPressed: () {}, // opcional: mostrar detalles
+                    deleteIcon: const Icon(Icons.close, color: Colors.white),
+                    onDeleted: () async {
+                      final sure = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Quitar importación'),
+                          content: Text('¿Eliminar “$zona” de $fecha?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+                            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Eliminar')),
+                          ],
+                        ),
+                      );
+                      if (sure == true) {
+                        await DatabaseHelper().eliminarZonaImport(id);
+                        await cargarZonaImports();
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
 
             // 📆 INPUT DE FECHA
             TextFormField(
               initialValue: fecha,
-              onChanged: (val) => fecha = val,
+              onChanged: (val) {
+                fecha = val;
+                cargarZonaImports();
+              },
               decoration: const InputDecoration(
                 labelText: 'Fecha (YYYY-MM-DD)',
                 border: OutlineInputBorder(),

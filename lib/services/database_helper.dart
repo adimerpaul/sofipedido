@@ -88,7 +88,7 @@ class DatabaseHelper {
             fecha TEXT,
             zona TEXT,
             color TEXT,
-            colorStyle TEXT,
+            colorStyle TEXT
           )
         ''');
       },
@@ -146,12 +146,29 @@ class DatabaseHelper {
   // insertColorImport
   Future<void> insertColorImport(String fecha, String zona, String color, String colorStyle) async {
     final db = await database;
-    await db.insert('zona_import', {
-      'fecha': fecha,
-      'zona': zona,
-      'color': color,
-      'colorStyle': colorStyle,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    // upsert manual por (fecha, zona)
+    await db.delete('zona_import', where: 'fecha = ? AND zona = ?', whereArgs: [fecha, zona]);
+    await db.insert(
+      'zona_import',
+      {'fecha': fecha, 'zona': zona, 'color': color, 'colorStyle': colorStyle},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+  Future<List<Map<String, dynamic>>> obtenerZonaImports({String? fecha}) async {
+    final db = await database;
+    if (fecha != null && fecha.isNotEmpty) {
+      return await db.query(
+        'zona_import',
+        where: 'fecha = ?',
+        whereArgs: [fecha],
+        orderBy: 'id DESC',
+      );
+    }
+    return await db.query('zona_import', orderBy: 'id DESC');
+  }
+  Future<void> eliminarZonaImport(int id) async {
+    final db = await database;
+    await db.delete('zona_import', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> importarPedidosDesdeApi(String fecha, color) async {
@@ -326,5 +343,22 @@ class DatabaseHelper {
     ORDER BY total_cantidad DESC
   ''');
   }
+  Future<List<Map<String, dynamic>>> obtenerResumenProductosPorFecha(String fecha) async {
+    final db = await database;
+    // JOIN para tomar la fecha desde pedidos
+    return await db.rawQuery('''
+    SELECT 
+      p.cod_prod,
+      p.nombre,
+      SUM(p.cantidad)   AS total_cantidad,
+      SUM(p.subtotal)   AS total_subtotal
+    FROM productos p
+    INNER JOIN pedidos pe ON pe.id = p.pedido_id
+    WHERE date(pe.fecha) = ?
+    GROUP BY p.cod_prod, p.nombre
+    ORDER BY total_cantidad DESC
+  ''', [fecha]);
+  }
+
 
 }

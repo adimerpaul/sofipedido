@@ -154,7 +154,7 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
                         ),
                       ),
                       const Spacer(),
-                      if (!estaConfirmado)
+                      // if (!estaConfirmado)
                         ElevatedButton.icon(
                           onPressed: confirmarPedido,
                           icon: const Icon(Icons.check_circle),
@@ -230,7 +230,7 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
                                                   .toString(),
                                               keyboardType:
                                                   TextInputType.number,
-                                              enabled: !estaConfirmado,
+                                              // enabled: !estaConfirmado,
                                               onChanged: (val) {
                                                 final nuevaCantidad =
                                                     int.tryParse(val);
@@ -262,7 +262,7 @@ class _DetallePedidoViewState extends State<DetallePedidoView> {
                                                   .toString(),
                                               keyboardType:
                                                   TextInputType.number,
-                                              enabled: !estaConfirmado,
+                                              // enabled: !estaConfirmado,
                                               onChanged: (val) {
                                                 final nuevoPeso =
                                                     double.tryParse(val);
