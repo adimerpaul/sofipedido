@@ -111,6 +111,15 @@ class _PedidosViewState extends State<PedidosView> {
       }
     });
   }
+  Future<void> exportarDatos() async {
+    setState(() {
+      loading = true;
+    });
+
+    await DatabaseHelper().exportarPedidos();
+    // await cargarTotales();
+    await cargarPedidos();
+  }
 
   void _seleccionarChip(Map<String, dynamic> z) async {
     final fecha = (z['fecha'] ?? '').toString();
@@ -153,6 +162,13 @@ class _PedidosViewState extends State<PedidosView> {
               icon: const Icon(Icons.filter_alt_off, color: Colors.white),
               label: const Text('Quitar filtro', style: TextStyle(color: Colors.white)),
             ),
+
+          // ⬇️ Botón ENVIAR (exportar)
+          TextButton.icon(
+            onPressed: (loading || confirmados == 0) ? null : exportarDatos,
+            icon: const Icon(Icons.upload, color: Colors.white),
+            label: const Text('Enviar', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
       body: loading
