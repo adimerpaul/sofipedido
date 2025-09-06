@@ -14,6 +14,7 @@ class _ImportViewState extends State<ImportView> {
   bool loading = false;
   String mensaje = '';
   String fecha = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  late final TextEditingController _fechaCtrl;
 
   int total = 0;
   int confirmados = 0;
@@ -39,8 +40,33 @@ class _ImportViewState extends State<ImportView> {
   @override
   void initState() {
     super.initState();
+    _fechaCtrl = TextEditingController(text: fecha);
     cargarTotales();
     cargarZonaImports();
+  }
+  @override
+  void dispose() {
+    _fechaCtrl.dispose(); // 👈
+    super.dispose();
+  }
+  Future<void> _seleccionarFecha() async {
+    final inicial = DateTime.tryParse(fecha) ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: inicial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      // opcional si tienes localización configurada:
+      // locale: const Locale('es', 'BO'),
+    );
+    if (picked != null) {
+      final f = DateFormat('yyyy-MM-dd').format(picked);
+      setState(() {
+        fecha = f;
+        _fechaCtrl.text = f;
+      });
+      await cargarZonaImports(); // se actualiza el historial con la nueva fecha
+    }
   }
   Future<void> cargarZonaImports() async {
     final data = await DatabaseHelper().obtenerZonaImports(fecha: fecha);
@@ -214,16 +240,14 @@ class _ImportViewState extends State<ImportView> {
 
             // 📆 INPUT DE FECHA
             TextFormField(
-              initialValue: fecha,
-              onChanged: (val) {
-                fecha = val;
-                cargarZonaImports();
-              },
+              controller: _fechaCtrl,
+              readOnly: true,
               decoration: const InputDecoration(
-                labelText: 'Fecha (YYYY-MM-DD)',
+                labelText: 'Fecha',
                 border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.calendar_today),
               ),
-              keyboardType: TextInputType.datetime,
+              onTap: _seleccionarFecha, // abre el calendario
             ),
             const SizedBox(height: 16),
 

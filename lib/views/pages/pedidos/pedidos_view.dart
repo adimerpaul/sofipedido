@@ -65,8 +65,10 @@ class _PedidosViewState extends State<PedidosView> {
     if ((colorStyleFiltroHex != null && colorStyleFiltroHex!.isNotEmpty) ||
         (colorNameFiltro != null && colorNameFiltro!.isNotEmpty)) {
       if ((colorStyleFiltroHex ?? '').isNotEmpty && (colorNameFiltro ?? '').isNotEmpty) {
-        whereParts.add('(p.colorStyle = ? OR p.colorStyle = ?)');
-        args.addAll([colorStyleFiltroHex, colorNameFiltro]);
+        // whereParts.add('(p.colorStyle = ? OR p.colorStyle = ?)');
+        // args.addAll([colorStyleFiltroHex, colorNameFiltro]);
+        whereParts.add("p.colorStyle like '%' || ? || '%' OR p.colorStyle like '%' || ? || '%'");
+        args.addAll([colorStyleFiltroHex!.replaceAll('#', ''), colorNameFiltro!.replaceAll('#', '')]);
       } else {
         // solo uno de los dos está seteado
         whereParts.add('p.colorStyle = ?');
@@ -114,6 +116,7 @@ class _PedidosViewState extends State<PedidosView> {
     final fecha = (z['fecha'] ?? '').toString();
     final colorHex = (z['colorStyle'] ?? '').toString(); // #FF7043
     final colorName = (z['color'] ?? '').toString();     // deep-orange-4
+    print('fecha: $fecha, colorHex: $colorHex, colorName: $colorName');
 
     setState(() {
       fechaFiltro = fecha;
